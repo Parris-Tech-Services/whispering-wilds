@@ -4015,14 +4015,20 @@ class Game:
         map_html += "Legend: @ you, · ground, ^ above, v below, ? unknown"
         
         update_panel("map", map_html)
-        # Only print ascii map to main console when verbose UI is enabled
-        if not quiet and VERBOSE_UI:
+        # Print to the console when asked for explicitly and the sidebar panel
+        # can't be seen (phones under 900px and compact mode hide the sidebar).
+        try:
+            sidebar = document.getElementById("sidebar")
+            sidebar_visible = bool(sidebar) and window.getComputedStyle(sidebar).display != "none"
+        except Exception:
+            sidebar_visible = False
+        if not quiet and (VERBOSE_UI or not sidebar_visible):
             self.say(border)
             for line in lines:
                 self.say("|" + line + "|")
             self.say(border)
             self.say(f"You are at: {self.room().name}")
-            self.say("Legend: @ you, · visited, ? unknown, blank = off-map")
+            self.say("Legend: @ you, · ground, ^ above, v below, ? unknown")
 
     def talk(self, who: str) -> None:
         # TASK F: Default to single visible NPC if no name provided
