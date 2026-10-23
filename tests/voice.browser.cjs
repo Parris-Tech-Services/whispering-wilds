@@ -8,7 +8,8 @@ const { chromium } = require('playwright');
   const failures = [];
   page.on('pageerror', e => failures.push(e.message));
   try {
-    await page.goto('http://127.0.0.1:8000/index.html', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    const baseUrl = process.env.WW_BASE_URL || 'http://127.0.0.1:8000';
+    await page.goto(baseUrl.replace(/\/$/, '') + '/index.html', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.waitForFunction(() => window.pyscript_ready === true, { timeout: 120000 });
     assert.equal(await page.locator('#ww-character-stage').isVisible(), false, 'stage hidden before speaking');
     await page.locator('#cmd').fill('talk caretaker');
