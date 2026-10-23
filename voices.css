@@ -1,0 +1,29 @@
+/* Compact stage sits above the game log without covering gameplay controls. */
+#ww-character-stage[hidden] { display:none !important; }
+#ww-character-stage { display:flex; align-items:stretch; gap:14px; padding:12px; margin:0 0 12px; color:var(--fg,#e5eadd); background:linear-gradient(135deg,rgba(55,86,70,.3),rgba(23,31,29,.88)); border:1px solid var(--border,#536a57); border-radius:12px; box-shadow:0 4px 18px #0002; }
+#ww-portrait { width:112px; min-width:112px; aspect-ratio:9/10; overflow:hidden; border-radius:10px; border:1px solid #b9d5b952; background:#25352e; }
+.ww-portrait-svg { display:block; width:100%; height:100%; }
+#ww-character-stage .ww-content { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+#ww-speaker { font-weight:750; letter-spacing:.04em; color:var(--accent,#bcdb9e); font-size:1rem; }
+#ww-caption { font-size:1rem; line-height:1.5; margin:0; }
+#ww-character-stage .ww-controls { display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; align-items:center; }
+#ww-character-stage .ww-controls button { padding:6px 10px; min-height:32px; font-size:.78rem; }
+#ww-audio-status { font-size:.75rem; color:var(--muted,#bec7bb); }
+.ww-breath { transform-origin:72px 143px; animation:ww-breathe 4s ease-in-out infinite; }
+.ww-face { animation:ww-tilt 5.2s ease-in-out infinite; transform-origin:72px 88px; }
+.ww-eye { transform-origin:72px 88px; animation:ww-blink 6.1s infinite; }
+.ww-speaking .ww-mouth { animation:ww-speaking .22s ease-in-out infinite alternate; transform-origin:72px 115px; }
+.ww-speaking #ww-portrait { box-shadow:0 0 0 2px #a8d59d5e; }
+@keyframes ww-breathe { 0%,100% { transform:scale(1); } 50% { transform:scale(1.015,1.025); } }
+@keyframes ww-tilt { 0%,100% {transform:rotate(0deg)} 50% {transform:rotate(1.2deg)} }
+@keyframes ww-blink {0%,44%,47%,100% { transform:scaleY(1); } 45%,46% {transform:scaleY(.08);} }
+@keyframes ww-speaking { from {transform:scaleY(1)} to {transform:scaleY(2.15)} }
+@media (max-width:600px) {
+  #ww-character-stage { gap:10px; padding:9px; }
+  #ww-portrait { width:75px; min-width:75px; }
+  #ww-caption { font-size:.9rem; }
+  #ww-character-stage .ww-controls button { padding:8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ww-breath,.ww-face,.ww-eye,.ww-speaking .ww-mouth { animation:none !important; }
+}
