@@ -45,7 +45,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       - name: Test actual game in Chromium at mobile width
         run: |
           python -m http.server 8000 --bind 127.0.0.1 >/tmp/ww-http.log 2>&1 &
