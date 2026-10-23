@@ -859,7 +859,7 @@
   <script type="module" src="https://pyscript.net/releases/2024.6.1/core.js"></script>
   
 <script src="https://josh-hub-96no.vercel.app/portal-adapter.js"></script>
-<script>PortalAdapter.init("whispering-wilds");</script>
+<script>if (window.PortalAdapter && typeof window.PortalAdapter.init === "function") { window.PortalAdapter.init("whispering-wilds"); }</script>
 </head>
 <body>
 <!-- Skip to Input Link for Accessibility -->
