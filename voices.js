@@ -51,15 +51,35 @@
       facialHair+'</g></svg>';
   }
   function updateToggle() {
-    for (const id of ["ww-voice-toggle", "ww-voice-settings-toggle"]) {
-      const el = byId(id);
-      if (el) { el.textContent = "Recorded Voices: " + (enabled ? "ON" : "OFF"); el.setAttribute("aria-pressed", String(enabled)); }
+    const compact = byId("ww-voice-toggle");
+    if (compact) {
+      compact.textContent = enabled ? "🔊" : "🔇";
+      compact.setAttribute("aria-label", enabled ? "Recorded voices on" : "Recorded voices off");
+      compact.setAttribute("aria-pressed", String(enabled));
+      compact.title = enabled ? "Turn off recorded voices" : "Turn on recorded voices";
+    }
+    const settings = byId("ww-voice-settings-toggle");
+    if (settings) {
+      settings.textContent = "Recorded Voices: " + (enabled ? "ON" : "OFF");
+      settings.setAttribute("aria-pressed", String(enabled));
+    }
+  }
+  function setExpanded(expanded) {
+    const stage = byId("ww-character-stage");
+    if (stage) stage.classList.toggle("ww-expanded", Boolean(expanded));
+    const button = byId("ww-expand");
+    if (button) {
+      button.setAttribute("aria-expanded", String(Boolean(expanded)));
+      button.setAttribute("aria-label", expanded ? "Hide expanded dialogue" : "Show dialogue and larger portrait");
+      button.textContent = expanded ? "⌃" : "⌄";
     }
   }
   function setSpeaking(state) {
     speaking = state;
     const stage = byId("ww-character-stage");
     if (stage) stage.classList.toggle("ww-speaking", state);
+    const stateText = byId("ww-voice-state");
+    if (stateText) stateText.textContent = state ? "Speaking…" : "Voice ready";
     const replay = byId("ww-replay");
     if (replay) replay.disabled = !key;
     const stop = byId("ww-stop");
@@ -82,13 +102,22 @@
     enabled = Boolean(next);
     try { localStorage.setItem("wilds_recorded_voices",String(enabled)); } catch (_) {}
     updateToggle();
-    if (!enabled) stop();
+    if (!enabled) {
+      stop();
+      const stage = byId("ww-character-stage");
+      if (stage) stage.hidden = true;
+    }
   }
   function play(id, force = false) {
     const line = lines[id];
     if (!line) { console.warn("Unmapped dialogue", id); return false; }
     key = id;
     const stage = byId("ww-character-stage");
+    if (!enabled && !force) {
+      stop();
+      if (stage) stage.hidden = true;
+      return false;
+    }
     if (stage) {
       stage.hidden = false;
       stage.dataset.speaker = line.speaker.toLowerCase();
@@ -98,7 +127,6 @@
       if (art) art.innerHTML = portrait(line.speaker);
     }
     stop();
-    if (!enabled && !force) return false;
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     sound.src = "./" + line.file;
     sound.volume = .9;
@@ -110,6 +138,7 @@
         setSpeaking(false);
         const msg = byId("ww-audio-status");
         if (msg) msg.textContent = "Audio could not start. Tap Replay to try again.";
+        setExpanded(true);
         console.warn("Recorded dialogue unavailable:", line.file, err);
       }
     });
@@ -125,12 +154,17 @@
       setSpeaking(false);
       const msg = byId("ww-audio-status");
       if (msg) msg.textContent = "Recording unavailable; dialogue text remains visible.";
+      setExpanded(true);
     });
     for (const id of ["ww-voice-toggle", "ww-voice-settings-toggle"]) {
       byId(id)?.addEventListener("click", () => setEnabled(!enabled));
     }
     byId("ww-replay")?.addEventListener("click", () => { if (key) play(key, true); });
     byId("ww-stop")?.addEventListener("click", stop);
+    byId("ww-expand")?.addEventListener("click", () => {
+      setExpanded(!byId("ww-character-stage")?.classList.contains("ww-expanded"));
+    });
+    setExpanded(false);
     updateToggle();
   }
   window.wildsVoice = Object.freeze({

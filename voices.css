@@ -1,29 +1,61 @@
-/* Compact stage sits above the game log without covering gameplay controls. */
+/* Dialogue already appears in the game log. Keep its voice controls small
+   enough that they never displace gameplay on a phone. */
 #ww-character-stage[hidden] { display:none !important; }
-#ww-character-stage { display:flex; align-items:stretch; gap:14px; padding:12px; margin:0 0 12px; color:var(--fg,#e5eadd); background:linear-gradient(135deg,rgba(55,86,70,.3),rgba(23,31,29,.88)); border:1px solid var(--border,#536a57); border-radius:12px; box-shadow:0 4px 18px #0002; }
-#ww-portrait { width:112px; min-width:112px; aspect-ratio:9/10; overflow:hidden; border-radius:10px; border:1px solid #b9d5b952; background:#25352e; }
+#ww-character-stage {
+  display:flex; align-items:center; gap:8px; box-sizing:border-box;
+  margin:0 0 5px; padding:5px 7px; min-height:48px;
+  border:1px solid var(--border,#536a57); border-radius:10px;
+  background:var(--panel-bg,#182822); color:var(--fg,#e5eadd);
+  max-width:100%; min-width:0; overflow:hidden;
+}
+#ww-portrait { width:36px; min-width:36px; height:40px; flex:0 0 36px;
+  overflow:hidden; border-radius:6px; background:#25352e; }
 .ww-portrait-svg { display:block; width:100%; height:100%; }
-#ww-character-stage .ww-content { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
-#ww-speaker { font-weight:750; letter-spacing:.04em; color:var(--accent,#bcdb9e); font-size:1rem; }
-#ww-caption { font-size:1rem; line-height:1.5; margin:0; }
-#ww-character-stage .ww-controls { display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; align-items:center; }
-#ww-character-stage .ww-controls button { padding:6px 10px; min-height:32px; font-size:.78rem; }
-#ww-audio-status { font-size:.75rem; color:var(--muted,#bec7bb); }
+#ww-character-stage .ww-content { display:grid; grid-template-columns:minmax(0,1fr) auto;
+  gap:3px 7px; align-items:center; flex:1; min-width:0; }
+#ww-character-stage .ww-summary { display:flex; min-width:0; flex-direction:column; gap:1px; overflow:hidden; }
+#ww-speaker { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-weight:650; font-size:13px; line-height:1.2; letter-spacing:.02em; color:var(--accent,#bcdb9e); }
+#ww-voice-state { display:block; font-size:10px; line-height:1.2; color:var(--muted,#bec7bb); }
+#ww-character-stage .ww-controls { display:flex; align-items:center; flex-wrap:nowrap; gap:3px; min-width:0; }
+#ww-character-stage .ww-controls button {
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:0; margin:0; border-radius:7px; box-sizing:border-box;
+  min-width:32px; width:32px; height:34px; min-height:34px;
+  font-size:16px; line-height:1; flex:0 0 32px; white-space:nowrap;
+  cursor:pointer; touch-action:manipulation;
+}
+#ww-character-stage .ww-controls button:disabled { opacity:.4; cursor:default; }
+#ww-caption,#ww-audio-status { display:none; }
+#ww-character-stage.ww-speaking #ww-portrait { box-shadow:0 0 0 2px #a8d59d5e; }
+/* Full transcript/portrait is opt-in, not the default playing state. */
+#ww-character-stage.ww-expanded { align-items:flex-start; padding:10px; gap:10px; }
+#ww-character-stage.ww-expanded #ww-portrait { width:78px; min-width:78px;
+  height:88px; flex-basis:78px; }
+#ww-character-stage.ww-expanded .ww-content { align-content:start; }
+#ww-character-stage.ww-expanded #ww-caption {
+  display:block; grid-column:1/-1; margin:5px 0; font-size:14px;
+  line-height:1.55; overflow-wrap:anywhere;
+}
+#ww-character-stage.ww-expanded #ww-audio-status:not(:empty) {
+  display:block; grid-column:1/-1; color:var(--muted,#bec7bb); font-size:12px;
+}
 .ww-breath { transform-origin:72px 143px; animation:ww-breathe 4s ease-in-out infinite; }
 .ww-face { animation:ww-tilt 5.2s ease-in-out infinite; transform-origin:72px 88px; }
 .ww-eye { transform-origin:72px 88px; animation:ww-blink 6.1s infinite; }
-.ww-speaking .ww-mouth { animation:ww-speaking .22s ease-in-out infinite alternate; transform-origin:72px 115px; }
-.ww-speaking #ww-portrait { box-shadow:0 0 0 2px #a8d59d5e; }
+.ww-speaking .ww-mouth { animation:ww-speaking .22s ease-in-out infinite alternate;
+  transform-origin:72px 115px; }
 @keyframes ww-breathe { 0%,100% { transform:scale(1); } 50% { transform:scale(1.015,1.025); } }
 @keyframes ww-tilt { 0%,100% {transform:rotate(0deg)} 50% {transform:rotate(1.2deg)} }
 @keyframes ww-blink {0%,44%,47%,100% { transform:scaleY(1); } 45%,46% {transform:scaleY(.08);} }
 @keyframes ww-speaking { from {transform:scaleY(1)} to {transform:scaleY(2.15)} }
-@media (max-width:600px) {
-  #ww-character-stage { gap:10px; padding:9px; }
-  #ww-portrait { width:75px; min-width:75px; }
-  #ww-caption { font-size:.9rem; }
-  #ww-character-stage .ww-controls button { padding:8px; }
+@media(max-width:370px) {
+  #ww-character-stage { gap:5px; padding:4px; }
+  #ww-character-stage .ww-controls { gap:2px; }
+  #ww-character-stage .ww-controls button { width:29px; min-width:29px; flex-basis:29px; height:32px; min-height:32px; }
+  #ww-portrait { width:32px; min-width:32px; flex-basis:32px; height:36px; }
+  #ww-speaker { font-size:12px; }
 }
-@media (prefers-reduced-motion:reduce) {
+@media(prefers-reduced-motion:reduce) {
   .ww-breath,.ww-face,.ww-eye,.ww-speaking .ww-mouth { animation:none !important; }
 }
