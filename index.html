@@ -892,16 +892,21 @@ document.getElementById('skip-to-input').addEventListener('blur', function() {
     <div id="micro-goal-bar" style="display:none;"></div>
     
     <!-- Output with aria-live for accessibility -->
-    <section id="ww-character-stage" role="region" aria-label="Spoken character dialogue" hidden>
+    <!-- Minimal NPC voice strip. The full line is already printed in the game log. -->
+    <section id="ww-character-stage" role="region" aria-label="Character voice player" hidden>
       <div id="ww-portrait" aria-hidden="true"></div>
       <div class="ww-content">
-        <strong id="ww-speaker">Character</strong>
-        <p id="ww-caption" aria-live="polite"></p>
-        <div class="ww-controls">
-          <button type="button" id="ww-voice-toggle" aria-pressed="true">Recorded Voices: ON</button>
-          <button type="button" id="ww-replay" aria-label="Replay recorded dialogue">▶ Replay</button>
-          <button type="button" id="ww-stop" disabled>■ Stop</button>
+        <div class="ww-summary">
+          <strong id="ww-speaker">Character</strong>
+          <span id="ww-voice-state" aria-live="off">Voice ready</span>
         </div>
+        <div class="ww-controls">
+          <button type="button" id="ww-voice-toggle" aria-pressed="true" aria-label="Recorded voices on" title="Toggle recorded voices">🔊</button>
+          <button type="button" id="ww-replay" aria-label="Replay recorded dialogue" title="Replay recording">▶</button>
+          <button type="button" id="ww-stop" aria-label="Stop recorded dialogue" title="Stop speaking" disabled>■</button>
+          <button type="button" id="ww-expand" aria-expanded="false" aria-controls="ww-caption" aria-label="Show dialogue and larger portrait" title="Show dialogue">⌄</button>
+        </div>
+        <p id="ww-caption" aria-live="off"></p>
         <small id="ww-audio-status" role="status"></small>
       </div>
     </section>
