@@ -39,7 +39,11 @@ const { chromium } = require('playwright');
     await page.locator('#ww-replay').click();
     await page.locator('#out > div').filter({hasText: 'The east gate has been stubborn for years.'}).first().waitFor();
     assert.match(await page.locator('#ww-caption').textContent(), /east gate has been stubborn/);
-    await page.locator('#ww-stop').click();
+    // A short studio recording may have ended before this interaction.
+    // Stop is disabled at natural end; both states are valid.
+    if (await page.locator('#ww-stop').isEnabled()) {
+      await page.locator('#ww-stop').click();
+    }
     await page.setViewportSize({ width: 320, height: 700 });
     const smallStage = await page.locator('#ww-character-stage').boundingBox();
     assert.ok(smallStage.height <= 65, 'voice strip remains compact at 320px wide');
