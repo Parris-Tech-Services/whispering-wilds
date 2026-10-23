@@ -37,7 +37,7 @@ const { chromium } = require('playwright');
     await page.locator('#send').click();
     await page.locator('#ww-character-stage').waitFor({ state: 'visible' });
     await page.locator('#ww-replay').click();
-    await page.getByText('The east gate has been stubborn for years.', { exact: false }).first().waitFor();
+    await page.locator('#out > div').filter({hasText: 'The east gate has been stubborn for years.'}).first().waitFor();
     assert.match(await page.locator('#ww-caption').textContent(), /east gate has been stubborn/);
     await page.locator('#ww-stop').click();
     await page.setViewportSize({ width: 320, height: 700 });
