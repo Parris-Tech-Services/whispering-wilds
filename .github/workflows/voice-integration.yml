@@ -49,4 +49,9 @@ jobs:
       - name: Test actual game in Chromium at mobile width
         run: |
           python -m http.server 8000 --bind 127.0.0.1 >/tmp/ww-http.log 2>&1 &
+          for attempt in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/index.html -o /dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:8000/voices.js -o /dev/null
           node tests/voice.browser.cjs
