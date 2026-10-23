@@ -572,7 +572,9 @@
     }
     
     #settings-area.expanded {
-      max-height: 200px;
+      max-height: min(70vh, 740px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
       padding: 8px 0;
     }
     
