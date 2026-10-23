@@ -853,6 +853,7 @@
   </style>
 
   <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/core.css" />
+  <link rel="stylesheet" href="./voices.css" />
   <script type="module" src="https://pyscript.net/releases/2024.6.1/core.js"></script>
   
 <script src="https://josh-hub-96no.vercel.app/portal-adapter.js"></script>
@@ -889,6 +890,19 @@ document.getElementById('skip-to-input').addEventListener('blur', function() {
     <div id="micro-goal-bar" style="display:none;"></div>
     
     <!-- Output with aria-live for accessibility -->
+    <section id="ww-character-stage" role="region" aria-label="Spoken character dialogue" hidden>
+      <div id="ww-portrait" aria-hidden="true"></div>
+      <div class="ww-content">
+        <strong id="ww-speaker">Character</strong>
+        <p id="ww-caption" aria-live="polite"></p>
+        <div class="ww-controls">
+          <button type="button" id="ww-voice-toggle" aria-pressed="true">Recorded Voices: ON</button>
+          <button type="button" id="ww-replay" aria-label="Replay recorded dialogue">▶ Replay</button>
+          <button type="button" id="ww-stop" disabled>■ Stop</button>
+        </div>
+        <small id="ww-audio-status" role="status"></small>
+      </div>
+    </section>
     <div id="out" role="log" aria-live="off"></div>
     
     <!-- Clear Logs Link -->
@@ -1106,6 +1120,7 @@ document.getElementById('skip-to-input').addEventListener('blur', function() {
       <div class="settings-section">
         <h4>📖 Reading Options</h4>
         <button id="read-aloud-toggle" onclick="toggleReadAloud()" style="padding:4px 8px;font-size:11px;">Read Aloud: OFF</button>
+        <button type="button" id="ww-voice-settings-toggle" aria-pressed="true" style="padding:4px 8px;font-size:11px;">Recorded Voices: ON</button>
         <button id="simplify-text-toggle" onclick="toggleSimplifyText()" style="margin-left:8px;padding:4px 8px;font-size:11px;">Simplify Text: OFF</button>
         <button id="stop-speech-btn" onclick="stopSpeech()" style="margin-left:8px;padding:4px 8px;font-size:11px;display:none;">Stop Reading</button>
       </div>
@@ -1810,6 +1825,8 @@ function toggleReadAloud() {
 
 function speakText(text) {
   if (!readAloudEnabled || !text) return;
+  // Recorded lines replace speech synthesis, never overlap.
+  if (window.wildsVoice && window.wildsVoice.isPlaying()) return;
   
   // Check if speech synthesis is supported
   if (!('speechSynthesis' in window)) {
@@ -2303,6 +2320,7 @@ function importSave() {
 }
 </script>
 
+<script src="./voices.js"></script>
 <script type="py">
 # Simple Module class to simulate Python modules
 class Module:
@@ -6096,6 +6114,16 @@ def part6_post_init(game):
     }
     _ = game._p6["rng"].random()
 
+def voiced_line(game, voice_key, speaker, line):
+    """Play a mapped studio recording and always keep its dialogue in the text log."""
+    try:
+        if window.wildsVoice:
+            window.wildsVoice.play(voice_key)
+    except Exception as exc:
+        console.warn(f"Voice playback failed for {voice_key}: {exc}")
+    game.say(f'{speaker}: "{line}"')
+
+
 def _p6_show_dialog(game, npc: str, options):
     game._p6["dialog"] = {"npc": npc, "options": options}
     game.say(f"{npc} listens. Choose:")
@@ -6104,6 +6132,10 @@ def _p6_show_dialog(game, npc: str, options):
     game.say("Type a number (e.g., 1) or use: say [n]")
 
 def _p6_open_caretaker_dialog(game):
+    if not getattr(game, "_ww_caretaker_greeted", False):
+        game._ww_caretaker_greeted = True
+        voiced_line(game, "caretaker_intro", "Caretaker",
+                    "This place was built to shelter travellers, not keep them. You may leave whenever you are ready.")
     q = game._p6["quests"]["heal_grove"]
     state = q["state"]
     if state in ("new", "offered"):
@@ -6135,6 +6167,7 @@ def _p6_open_caretaker_dialog(game):
             ("Tell me a story.", "ct_story"),
             ("Goodbye.", "ct_bye"),
         ]
+    opts.insert(-1, ("What about the east gate?", "ct_gate"))
     _p6_show_dialog(game, "Caretaker", opts)
 
 def _p6_eval_requirements(game, need: dict) -> bool:
@@ -6185,6 +6218,10 @@ def _p6_apply_reward(game, reward: dict) -> None:
 
 def _p6_do_action(game, action_id: str):
     q = game._p6["quests"]["heal_grove"]
+    if action_id == "ct_gate":
+        voiced_line(game, "caretaker_gate", "Caretaker",
+                    "The east gate has been stubborn for years. There is a key nearby, but metal alone will not tell you where to go.")
+        return
 
     if action_id == "ct_intro":
         variant = random.choice(CARETAKER_VARIANTS.get("intro", ['"A watcher of thresholds. I keep small fires lit."']))
@@ -6204,8 +6241,8 @@ def _p6_do_action(game, action_id: str):
         return
     if action_id == "ct_offer_quest":
         q["state"] = "offered"
-        variant = random.choice(CARETAKER_VARIANTS.get("grove_sick", ['"The northern grove is sick. Bring me 2 herbs for a remedy."']))
-        npc_say(game, "caretaker", variant)
+        voiced_line(game, "caretaker_quest", "Caretaker",
+                    "The grove has gone quiet. Bring me two healing herbs, and I will show you what the trees have been hiding.")
         game.say("Type: accept heal_grove   (or talk caretaker again for details)")
         return
     if action_id == "ct_grove_lore":
@@ -6383,6 +6420,9 @@ def _p6_cmd_turnin(game, args) -> bool:
             _p6_apply_reward(game, q["reward"])
             q["state"] = "turned_in"
             game.say(f"You hand over the materials. Quest complete: {q['title']}")
+            if qkey == "heal_grove":
+                voiced_line(game, "caretaker_complete", "Caretaker",
+                            "These are the right herbs. Thank you. Listen closely now; the grove is beginning to answer again.")
             game._update_inv_panel()
             _p6_update_quest_panel(game)
             
@@ -6899,6 +6939,10 @@ def _p7_cmd_harvest(game, args) -> bool:
     return True
 
 def _p7_open_trader_dialog(game):
+    if not getattr(game, "_ww_trader_greeted", False):
+        game._ww_trader_greeted = True
+        voiced_line(game, "trader_intro", "Trader",
+                    "Well, you look like someone carrying a story and not quite enough supplies. What can I help you find?")
     q = game._p6["quests"]["angler_aid"]
     state = q["state"]
     if state in ("new", "offered"):
@@ -6926,6 +6970,10 @@ def _p7_open_trader_dialog(game):
     _p6_show_dialog(game, "Trader", opts)
 
 def _p7_open_ranger_dialog(game):
+    if not getattr(game, "_ww_ranger_greeted", False):
+        game._ww_ranger_greeted = True
+        voiced_line(game, "ranger_intro", "Ranger",
+                    "You crossed the verge alone? Brave, perhaps. The tracks ahead say the wildlife is restless today.")
     q = game._p6["quests"]["mine_matters"]
     state = q["state"]
     if state in ("new", "offered"):
@@ -6995,8 +7043,8 @@ def _p7_open_hermit_dialog(game):
 def _p7_do_action(game, action_id: str):
     # Trader actions
     if action_id == "tr_wares":
-        game.say('The Trader: "*gestures broadly* Bits and bobs. Mostly I deal in fish and favors."')
-        game.say('The Trader: "And stories! Can\'t forget stories. Worth their weight in... well, stories!"')
+        voiced_line(game, "trader_wares", "Trader",
+                    "I trade in useful things. Fancy swords make noise, but a good bandage can get you home.")
         return
     if action_id == "tr_offer_quest":
         q = game._p6["quests"]["angler_aid"]
@@ -7037,15 +7085,17 @@ def _p7_do_action(game, action_id: str):
     if action_id == "rg_offer_quest":
         q = game._p6["quests"]["mine_matters"]
         q["state"] = "offered"
-        variant = random.choice(RANGER_VARIANTS.get("quest_offer", ['"I need 2 ore to repair gear. The mine to the east has some."']))
-        npc_say(game, "ranger", variant)
+        voiced_line(game, "ranger_quest", "Ranger",
+                    "I need two pieces of ore to mend our camp tools. Bring them back, and I will make it worth the walk.")
         game.say("Type: accept mine_matters")
         return
     if action_id == "rg_remind":
         game.say('The Ranger: "*gestures east* Two chunks of ore from the Abandoned Mine. Standard grade."')
         return
     if action_id == "rg_mine_tips":
-        game.say('The Ranger: "East of the wilds. Use \'mine\' to extract ore. Watch for cave-ins."')
+        voiced_line(game, "ranger_directions", "Ranger",
+                    "The lake lies north, and the mine is farther east. If the birds go silent, turn around before you learn why.")
+        game.say("Use 'mine' to extract ore when you reach the mine.")
         return
     if action_id == "rg_turnin":
         q = game._p6["quests"]["mine_matters"]
@@ -7218,6 +7268,9 @@ def _p7_cmd_turnin(game, args) -> bool:
                 _p6_apply_reward(game, q["reward"])
                 q["state"] = "turned_in"
                 game.say(f"Quest complete: {q['title']}")
+                if qkey == "mine_matters":
+                    voiced_line(game, "ranger_complete", "Ranger",
+                                "That will do nicely. The next traveller may have you to thank for a sharp axe and a warm fire.")
                 game._update_inv_panel()
                 _p6_update_quest_panel(game)
 
@@ -14115,41 +14168,7 @@ cmd_input.focus()
 # existing game to the window for debugging.
 window.game = game  # so the "Log Game State" button works
 
-def _send(_evt=None):
-    line = cmd_input.value.strip()
-    if not line:
-        return
-    add_to_history(line)
-    game.dispatch(line)
-    cmd_input.value = ""
-
-send_btn.addEventListener("click", create_proxy(_send))
-
-def _on_key(e):
-    global history_index
-    if e.key == "Enter":
-        _send()
-    elif e.key == "ArrowUp":
-        e.preventDefault()
-        if command_history:
-            # Start from the most recent command
-            if history_index >= len(command_history):
-                history_index = len(command_history) - 1
-            elif history_index > 0:
-                history_index -= 1
-            if history_index >= 0 and history_index < len(command_history):
-                cmd_input.value = command_history[history_index]
-    elif e.key == "ArrowDown":
-        e.preventDefault()
-        if command_history:
-            if history_index < len(command_history) - 1:
-                history_index += 1
-                cmd_input.value = command_history[history_index]
-            else:
-                history_index = len(command_history)
-                cmd_input.value = ""
-
-cmd_input.addEventListener("keydown", create_proxy(_on_key))
+# Input listeners above handle submissions exactly once (including voice playback).
 
 # Only show initial room if tutorial is not active (tutorial handles its own flow)
 if tutorial_done:
