@@ -55,3 +55,23 @@ jobs:
           done
           curl -fsS http://127.0.0.1:8000/voices.js -o /dev/null
           node tests/voice.browser.cjs
+
+  production-browser:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [offline-integrity, browser-gameplay]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install chromium
+      - name: Playtest actual deployed production site
+        env:
+          WW_BASE_URL: https://whispering-wilds-seven.vercel.app
+        run: |
+          curl -fsS "$WW_BASE_URL/voices.js" -o /dev/null
+          curl -fsS "$WW_BASE_URL/VO010.mp3" -o /dev/null
+          node tests/voice.browser.cjs
