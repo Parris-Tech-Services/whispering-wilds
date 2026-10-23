@@ -21,6 +21,7 @@ const { chromium } = require('playwright');
     assert.equal(duplicates, 1, 'only one intro from single command');
     await page.locator('#ww-voice-toggle').click();
     assert.equal(await page.locator('#ww-voice-toggle').getAttribute('aria-pressed'), 'false');
+    await page.locator('#settings-toggle').click();
     await page.locator('#ww-voice-settings-toggle').click();
     assert.equal(await page.locator('#ww-voice-toggle').getAttribute('aria-pressed'), 'true');
     await page.locator('#ww-replay').click();
