@@ -28,7 +28,7 @@ EVENTS = {
 
 class VoiceIntegrationTests(unittest.TestCase):
     def test_python_game_script_parses(self):
-        scripts = re.findall(r'<script type="py">([\s\S]*?)</script>', HTML)
+        scripts = re.findall(r'(?m)^<script type="py">([\s\S]*?)</script>', HTML)
         self.assertEqual(len(scripts), 1)
         ast.parse(scripts[0], filename="index.html:py")
 
