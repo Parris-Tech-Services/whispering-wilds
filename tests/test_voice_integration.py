@@ -45,7 +45,7 @@ class VoiceIntegrationTests(unittest.TestCase):
         ast.parse(scripts[0], filename="index.html:py")
 
     def test_save_roundtrip_preserves_rng_and_sets(self):
-        script = re.findall(r'(?m)^<script type="py">([\\s\\S]*?)</script>', HTML)[0]
+        script = re.findall(r'(?m)^<script type="py">([\s\S]*?)</script>', HTML)[0]
         module = ast.parse(script)
         helpers = [n for n in module.body if isinstance(n, ast.FunctionDef)
                    and n.name in ("_ww_encode_save", "_ww_decode_save")]
