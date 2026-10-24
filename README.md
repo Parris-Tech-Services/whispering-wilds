@@ -1,3 +1,9 @@
+# Agent / developer handoff
+
+**Start here if taking over work:** [TASK_TRIAGE.md](TASK_TRIAGE.md) identifies the one current next task (**014.1**, subject to live claim/completion check), the exact order of all 58 unchecked subtasks, tests, acceptance criteria, blockers and safe skip rules. Read [AGENTS.md](AGENTS.md) and [WORK_CHECKPOINT.md](WORK_CHECKPOINT.md) first, then the [numbered checklist](AUDIO_INTEGRATION_TODO.md). **Do not start from a randomly chosen TODO or a similarly named repository.**
+
+---
+
 Whispering Wilds — Play locally in VS Code
 
 Goal
