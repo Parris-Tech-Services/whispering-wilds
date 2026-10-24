@@ -77,6 +77,27 @@ const { chromium } = require('playwright');
         for(const [name,count] of Object.entries(materials))mats.set(name,count);
       },{room,materials});
     }
+
+    async function topic(action,file) {
+      const choice=await page.evaluate(action=>Array.from(window.game._p6.get('dialog').get('options').toJs()).findIndex(x=>x[1]===action)+1,action);
+      assert.ok(choice>0,'dialogue action available: '+action);
+      await command('say '+choice,file);
+    }
+    await fixture('sanctum',{herb:0});
+    await command('talk caretaker','VO001.mp3');
+    await topic('ct_gate','VO002.mp3');
+    await topic('ct_offer_quest','VO003.mp3');
+    await command('accept heal_grove');
+    await fixture('sanctum',{herb:2});
+    await command('turnin heal_grove','VO004.mp3');
+    await fixture('wilds_camp',{ore:0});
+    await command('talk ranger','VO005.mp3');
+    await topic('rg_offer_quest','VO007.mp3');
+    await command('accept mine_matters');
+    await command('talk ranger');
+    await topic('rg_mine_tips','VO006.mp3');
+    await fixture('wilds_camp',{ore:2});
+    await command('turnin mine_matters','VO008.mp3');
     await fixture('wilds_post',{fish:2});
     await command('talk trader','VO009.mp3');
     await command('say 1','VO010.mp3');
@@ -103,7 +124,12 @@ const { chromium } = require('playwright');
     const gold=await page.evaluate(()=>window.game._p3.get('gold'));
     await command('turnin tower_riddle');
     assert.equal(await page.evaluate(()=>window.game._p3.get('gold')),gold,'no duplicate quest reward');
-    assert.equal(heard.size,12,'all trader, hermit and watcher clips reached through game commands');
+    assert.equal(heard.size,20,'all twenty clips reached through game commands');
+    await command('save');
+    await page.reload({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>window.game && window.pyscript_ready===true,{timeout:120000});
+    await fixture('wilds_tower');
+    assert.equal(await page.evaluate(()=>window.game._p6.get('quests').get('tower_riddle').get('state')),'turned_in','watcher quest persists across save/reload');
     console.log('PASS: all ten newly integrated recordings play through real dialogue and quest commands');
 
     assert.deepEqual(failures, [], 'no uncaught page errors');
