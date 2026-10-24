@@ -7008,6 +7008,10 @@ def _p7_open_ranger_dialog(game):
     _p6_show_dialog(game, "Ranger", opts)
 
 def _p7_open_hermit_dialog(game):
+    if not getattr(game, "_ww_hermit_greeted", False):
+        game._ww_hermit_greeted = True
+        voiced_line(game, "hermit_intro", "Hermit",
+                    "Mind the step. The hut is older than either of us, and it enjoys reminding visitors.")
     q = game._p6["quests"]["hermit_glow"]
     state = q["state"]
     
@@ -7056,8 +7060,8 @@ def _p7_do_action(game, action_id: str):
     if action_id == "tr_offer_quest":
         q = game._p6["quests"]["angler_aid"]
         q["state"] = "offered"
-        variant = random.choice(TRADER_VARIANTS.get("quest_offer", ['"Bring me 2 fish from the lake. I\'ll pay well."']))
-        npc_say(game, "trader", variant)
+        voiced_line(game, "trader_quest", "Trader",
+                    "Two fish from the lake, please. Fresh ones, if you can manage it. My customers can tell the difference.")
         game.say("Type: accept angler_aid")
         return
     if action_id == "tr_remind":
@@ -7129,15 +7133,16 @@ def _p7_do_action(game, action_id: str):
     if action_id == "hm_offer_quest":
         q = game._p6["quests"]["hermit_glow"]
         q["state"] = "offered"
-        variant = random.choice(HERMIT_VARIANTS.get("quest_offer", ['"I need 3 glowcaps for a healing salve. They grow in damp places."']))
-        npc_say(game, "hermit", variant)
+        voiced_line(game, "hermit_quest", "Hermit",
+                    "Bring me three glowcaps. I will brew the useful part, and perhaps tell you what the blue flame means.")
         game.say("Type: accept hermit_glow")
         return
     if action_id == "hm_remind":
         game.say('The Hermit: "*waves hand* Glowcaps - pale fungi that glow faintly in the dark. Duh."')
         return
     if action_id == "hm_glow_tips":
-        game.say('The Hermit: "Damp cellars, wet caves. Use \'harvest\' when you find them. If you can."')
+        voiced_line(game, "hermit_glowcaps", "Hermit",
+                    "Glowcaps shine brightest where the light is thinnest. Pick carefully, and leave the smallest ones behind.")
         return
     if action_id == "hm_turnin":
         q = game._p6["quests"]["hermit_glow"]
@@ -7275,6 +7280,12 @@ def _p7_cmd_turnin(game, args) -> bool:
                 _p6_apply_reward(game, q["reward"])
                 q["state"] = "turned_in"
                 game.say(f"Quest complete: {q['title']}")
+                if qkey == "angler_aid":
+                    voiced_line(game, "trader_complete", "Trader",
+                                "Now those are fine fish. Here is our bargain, and a little extra for bringing them in whole.")
+                elif qkey == "hermit_glow":
+                    voiced_line(game, "hermit_complete", "Hermit",
+                                "Three, just as promised. Stay a moment and watch; the brew only settles when nobody rushes it.")
                 if qkey == "mine_matters":
                     voiced_line(game, "ranger_complete", "Ranger",
                                 "That will do nicely. The next traveller may have you to thank for a sharp axe and a warm fire.")
@@ -8881,6 +8892,25 @@ def add_gold(game, amount):
     if current + amount > GOLD_CAP:
         show_toast("💰 Pouch is full! (Max: 9,999 gold)", "warning", 3000)
 
+def _ww_encode_save(value):
+    """Preserve RNGs and sets used by quest/achievement extensions in JSON."""
+    if isinstance(value, random.Random):
+        return {"__ww_rng_state__": value.getstate()}
+    if isinstance(value, set):
+        return {"__ww_set__": list(value)}
+    raise TypeError(f"Unsupported saved value: {type(value).__name__}")
+
+def _ww_decode_save(value):
+    if set(value) == {"__ww_set__"}:
+        return set(value["__ww_set__"])
+    if set(value) == {"__ww_rng_state__"}:
+        def tuples(item):
+            return tuple(tuples(x) for x in item) if isinstance(item, list) else item
+        rng = random.Random()
+        rng.setstate(tuples(value["__ww_rng_state__"]))
+        return rng
+    return value
+
 def save_game(game, auto=False):
     """Save game state to localStorage with robust error handling"""
     try:
@@ -8908,7 +8938,7 @@ def save_game(game, auto=False):
             "saved_at": datetime.now().isoformat(),  # IMPROVEMENT: Save timestamp
         }
 
-        json_str = pyjson.dumps(state)
+        json_str = pyjson.dumps(state, default=_ww_encode_save)
         localStorage.setItem("wilds_save", json_str)
         
         # IMPROVEMENT: Different messaging for auto-save vs manual save
@@ -14018,6 +14048,79 @@ def p21_ext_handle_command(cmd, args, game):
 
 ext_handle_command = p21_ext_handle_command
 
+
+
+# Recorded Tower Watcher dialogue and the coal-gift quest.
+WW_PREVIOUS_HANDLER = ext_handle_command
+
+def _ww_tower_command(cmd, args, game):
+    quest = game._p6["quests"].setdefault("tower_riddle", {
+        "title": "Tower Echoes", "state": "new", "need": {"coal": 1},
+        "lore": "Offer a piece of coal to warm the Old Watchtower.",
+        "reward": {"gold": 2, "xp": 1}
+    })
+    room = game.world.rooms.get("wilds_tower")
+    if room and "Tower Watcher" not in room.npcs:
+        room.npcs.append("Tower Watcher")
+    here = game.cur_room == "wilds_tower"
+    who = " ".join(args).lower()
+    if cmd == "talk" and here and who in ("tower", "watcher", "tower watcher", "npc", ""):
+        if quest["state"] == "turned_in":
+            voiced_line(game, "tower_return", "Tower Watcher",
+                        "You returned. Most people only come for answers. It is good to see someone curious about the questions.")
+        else:
+            voiced_line(game, "tower_intro", "Tower Watcher",
+                        "The old watchtower remembers every storm. It has been waiting a long time for someone willing to listen.")
+            _p6_show_dialog(game, "Tower Watcher", [
+                ("Tell me the riddle.", "tw_riddle"),
+                ("Offer a piece of coal.", "tw_gift"),
+                ("Goodbye.", "tw_bye")
+            ])
+        return True
+    dialog = game._p6.get("dialog")
+    if cmd == "say" and dialog and dialog.get("npc") == "Tower Watcher":
+        if not here:
+            game._p6["dialog"] = None
+            game.say("Return to the Old Watchtower to speak with the Watcher.")
+            return True
+        if args and args[0] == "1":
+            voiced_line(game, "tower_riddle", "Tower Watcher",
+                        "The riddle is not a trick. It asks whether you can offer warmth without demanding anything back.")
+            if quest["state"] == "new":
+                quest["state"] = "offered"
+            game.say("Type: accept tower_riddle, then bring one coal and turnin tower_riddle.")
+        elif args and args[0] == "2":
+            return _ww_tower_command("turnin", ["tower_riddle"], game)
+        elif args and args[0] == "3":
+            game._p6["dialog"] = None
+        else:
+            game.say("Choose a topic from 1 to 3.")
+        return True
+    target = who.replace("_", "").replace(" ", "")
+    if cmd in ("accept", "turnin") and target == "towerriddle":
+        if not here:
+            game.say("Visit the Tower Watcher at the Old Watchtower.")
+        elif quest["state"] == "turned_in":
+            game.say("You have already completed Tower Echoes.")
+        elif cmd == "accept":
+            quest["state"] = "accepted"
+            game.say("Quest accepted: Tower Echoes. Bring one coal.")
+        elif not _p6_eval_requirements(game, quest["need"]):
+            game.say("Bring one coal to the Tower Watcher. Coal can be mined.")
+        else:
+            _p6_consume_requirements(game, quest["need"])
+            _p6_apply_reward(game, quest["reward"])
+            quest["state"] = "turned_in"
+            game._p6["dialog"] = None
+            voiced_line(game, "tower_complete", "Tower Watcher",
+                        "A coal from the dark. A kind gift for a cold place. Hear that? The stone has begun to sing.")
+            game.say("Quest complete: Tower Echoes")
+            game._update_inv_panel()
+        _p6_update_quest_panel(game)
+        return True
+    return WW_PREVIOUS_HANDLER(cmd, args, game)
+
+ext_handle_command = _ww_tower_command
 
 # ===========================
 # BOOT GAME
