@@ -8892,6 +8892,25 @@ def add_gold(game, amount):
     if current + amount > GOLD_CAP:
         show_toast("💰 Pouch is full! (Max: 9,999 gold)", "warning", 3000)
 
+def _ww_encode_save(value):
+    """Preserve RNGs and sets used by quest/achievement extensions in JSON."""
+    if isinstance(value, random.Random):
+        return {"__ww_rng_state__": value.getstate()}
+    if isinstance(value, set):
+        return {"__ww_set__": list(value)}
+    raise TypeError(f"Unsupported saved value: {type(value).__name__}")
+
+def _ww_decode_save(value):
+    if set(value) == {"__ww_set__"}:
+        return set(value["__ww_set__"])
+    if set(value) == {"__ww_rng_state__"}:
+        def tuples(item):
+            return tuple(tuples(x) for x in item) if isinstance(item, list) else item
+        rng = random.Random()
+        rng.setstate(tuples(value["__ww_rng_state__"]))
+        return rng
+    return value
+
 def save_game(game, auto=False):
     """Save game state to localStorage with robust error handling"""
     try:
@@ -8919,7 +8938,7 @@ def save_game(game, auto=False):
             "saved_at": datetime.now().isoformat(),  # IMPROVEMENT: Save timestamp
         }
 
-        json_str = pyjson.dumps(state)
+        json_str = pyjson.dumps(state, default=_ww_encode_save)
         localStorage.setItem("wilds_save", json_str)
         
         # IMPROVEMENT: Different messaging for auto-save vs manual save
