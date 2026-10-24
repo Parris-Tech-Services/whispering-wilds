@@ -36,6 +36,8 @@
   let originalVolumes = [];
   try { enabled = localStorage.getItem("wilds_recorded_voices") !== "false"; } catch (_) {}
 
+  let game300 = null;
+  void import('https://parris-voicebank.vercel.app/src/game300.js').then(module => { game300 = module; }).catch(() => {});
   const byId = id => document.getElementById(id);
   function portrait(speaker) {
     const p = portraits[speaker] || portraits.Caretaker;
@@ -102,6 +104,7 @@
     }
   }
   function stop() {
+    game300?.stopGame300();
     sound.pause();
     sound.currentTime = 0;
     setSpeaking(false);
@@ -155,6 +158,48 @@
     if (msg) msg.textContent = "";
     return true;
   }
+
+  function mountBonusVoices(){
+    const stage = byId('ww-character-stage');
+    if(!stage || byId('ww-game300-bonus'))return;
+    const box=document.createElement('details');box.id='ww-game300-bonus';
+    box.style.cssText='margin:3px 0 5px;padding:4px 8px;border:1px solid var(--border,#536a57);border-radius:8px;font-size:13px';
+    const summary=document.createElement('summary');summary.textContent='🎧 Bonus recorded conversations';box.appendChild(summary);
+    const form=document.createElement('div');form.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:6px 0;';
+    const characters=['caretaker','ranger','trader','innkeeper','herbalist','scholar','ferryman','miner','gatekeeper','the_whisper'];
+    const events=['greeting','help','quest','success','retry','ambient','explore','choice','farewell','surprise'];
+    const select=document.createElement('select');
+    for(const name of characters){const opt=document.createElement('option');opt.value=name;opt.textContent=name.replaceAll('_',' ');select.appendChild(opt);}
+    select.setAttribute('aria-label','Choose recorded character');
+    const hear=document.createElement('button');hear.type='button';hear.textContent='▶ Listen';
+    const nextLine=document.createElement('button');nextLine.type='button';nextLine.textContent='↻ Next';
+    const stopButton=document.createElement('button');stopButton.type='button';stopButton.textContent='■ Stop';
+    const caption=document.createElement('p');caption.setAttribute('role','status');
+    caption.style.cssText='font-size:12px;line-height:1.45;margin:6px 0;white-space:normal';
+    caption.textContent='Optional recorded dialogue, including bonus characters not yet part of the main story.';
+    let idx=0,ticket=0;
+    const playBonus=()=>{
+      if(!enabled){caption.textContent='Turn Recorded Voices on first.';return;}
+      if(!game300){caption.textContent='Voice library is loading; tap Listen again.';return;}
+      const mine=++ticket;
+      stop(); // Pause story audio; never play two voices together.
+      hear.disabled=true;caption.textContent='Loading recording…';
+      void game300.playGame300('whispering_wilds',select.value,events[idx],{
+        onEnd:()=>{if(mine===ticket)hear.disabled=false;}
+      }).then(result=>{
+        if(mine!==ticket)return;
+        hear.disabled=false;
+        caption.textContent=result.status==='playing'?result.text:'Recording unavailable ('+result.status+').';
+      }).catch(()=>{if(mine===ticket){hear.disabled=false;caption.textContent='Recording unavailable.';}});
+    };
+    hear.addEventListener('click',playBonus);
+    nextLine.addEventListener('click',()=>{idx=(idx+1)%events.length;playBonus();});
+    select.addEventListener('change',()=>{idx=0;game300?.stopGame300();caption.textContent='Choose Listen to hear this character.';});
+    stopButton.addEventListener('click',()=>{ticket++;game300?.stopGame300();hear.disabled=false;caption.textContent='Stopped.';});
+    box.addEventListener('toggle',()=>{if(!box.open){ticket++;game300?.stopGame300();hear.disabled=false;}});
+    form.append(select,hear,nextLine,stopButton);box.append(form,caption);
+    stage.insertAdjacentElement('afterend',box);
+  }
   function init() {
     if (initialized) return;
     initialized = true;
@@ -175,6 +220,7 @@
     });
     setExpanded(false);
     updateToggle();
+    mountBonusVoices();
   }
   window.wildsVoice = Object.freeze({
     lines, play, stop, setEnabled, isPlaying: () => speaking, get enabled() { return enabled; }
