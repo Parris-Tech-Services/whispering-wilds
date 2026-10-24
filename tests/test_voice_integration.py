@@ -3,6 +3,8 @@
 Run: python -m unittest discover -s tests -p 'test_*.py'
 """
 import ast
+import json
+import random
 import re
 import unittest
 from pathlib import Path
@@ -41,6 +43,21 @@ class VoiceIntegrationTests(unittest.TestCase):
         scripts = re.findall(r'(?m)^<script type="py">([\s\S]*?)</script>', HTML)
         self.assertEqual(len(scripts), 1)
         ast.parse(scripts[0], filename="index.html:py")
+
+    def test_save_roundtrip_preserves_rng_and_sets(self):
+        script = re.findall(r'(?m)^<script type="py">([\\s\\S]*?)</script>', HTML)[0]
+        module = ast.parse(script)
+        helpers = [n for n in module.body if isinstance(n, ast.FunctionDef)
+                   and n.name in ("_ww_encode_save", "_ww_decode_save")]
+        namespace = {"random": random}
+        exec(compile(ast.Module(body=helpers, type_ignores=[]), "save-helpers", "exec"), namespace)
+        rng = random.Random(42)
+        state = {"quests": {"tower_riddle": {"state": "turned_in"}}, "rng": rng, "seen": {"tower"}}
+        restored = json.loads(json.dumps(state, default=namespace["_ww_encode_save"]),
+                              object_hook=namespace["_ww_decode_save"])
+        self.assertEqual(restored["quests"], state["quests"])
+        self.assertEqual(restored["seen"], state["seen"])
+        self.assertEqual(restored["rng"].random(), rng.random())
 
     def test_recordings_exist_and_have_mp3_headers(self):
         for key, name in EVENTS.items():
