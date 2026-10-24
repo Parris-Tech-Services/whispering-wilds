@@ -37,6 +37,7 @@
   try { enabled = localStorage.getItem("wilds_recorded_voices") !== "false"; } catch (_) {}
 
   let game300 = null;
+  let suggestBonusForStory = () => {};
   void import('https://parris-voicebank.vercel.app/src/game300.js').then(module => { game300 = module; }).catch(() => {});
   const byId = id => document.getElementById(id);
   function portrait(speaker) {
@@ -139,6 +140,9 @@
       if (art) art.innerHTML = portrait(line.speaker);
     }
     stop();
+    // Only actual named story characters offer a matching *optional* bonus take.
+    // Never assert that hypothetical bonus actors are standing in the game.
+    suggestBonusForStory(id,line.speaker);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     sound.src = "./" + line.file;
     sound.volume = .9;
@@ -171,6 +175,22 @@
     const select=document.createElement('select');
     for(const name of characters){const opt=document.createElement('option');opt.value=name;opt.textContent=name.replaceAll('_',' ');select.appendChild(opt);}
     select.setAttribute('aria-label','Choose recorded character');
+    select.id='ww-bonus-speaker';
+    suggestBonusForStory=(storyId,speaker)=>{
+      const known={Caretaker:'caretaker',Ranger:'ranger',Trader:'trader'};
+      const name=known[speaker];
+      if(!name)return; // Hermit and Tower Watcher have no recorded Game300 role
+      // Only existing first-contact and explicit help/directions events map.
+      const event=storyId.endsWith('_intro')?'greeting':
+        storyId.endsWith('_directions')||storyId.endsWith('_wares')?'help':null;
+      if(!event)return; // No unearned bonus success/quest/audio claims
+      ticket++;
+      game300?.stopGame300();
+      hear.disabled=false;
+      select.value=name;
+      idx=events.indexOf(event);
+      caption.textContent='Optional recorded '+event+' from '+speaker+'. Tap Listen to hear the exact words.';
+    };
     const hear=document.createElement('button');hear.type='button';hear.textContent='▶ Listen';
     const nextLine=document.createElement('button');nextLine.type='button';nextLine.textContent='↻ Next';
     const stopButton=document.createElement('button');stopButton.type='button';stopButton.textContent='■ Stop';
