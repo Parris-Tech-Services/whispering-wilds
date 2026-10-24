@@ -23,6 +23,16 @@ EVENTS = {
     "ranger_complete": "VO008.mp3",
     "trader_intro": "VO009.mp3",
     "trader_wares": "VO010.mp3",
+    "trader_quest": "VO011.mp3",
+    "trader_complete": "VO012.mp3",
+    "hermit_intro": "VO013.mp3",
+    "hermit_glowcaps": "VO014.mp3",
+    "hermit_quest": "VO015.mp3",
+    "hermit_complete": "VO016.mp3",
+    "tower_intro": "VO017.mp3",
+    "tower_riddle": "VO018.mp3",
+    "tower_complete": "VO019.mp3",
+    "tower_return": "VO020.mp3",
 }
 
 

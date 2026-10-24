@@ -1,5 +1,4 @@
-/* Whispering Wilds: hand-authored dialogue maps to shipped VO001–VO010.
- * VO011–VO020 are deliberately not assigned until their text is confirmed.
+/* Whispering Wilds: all twenty recorded lines mapped to matching gameplay events.
  * Audio starts only from a user-initiated game action (browser autoplay policy).
  */
 (() => {
@@ -14,7 +13,17 @@
     ranger_quest: {file:"VO007.mp3", speaker:"Ranger", text:"I need two pieces of ore to mend our camp tools. Bring them back, and I will make it worth the walk."},
     ranger_complete: {file:"VO008.mp3", speaker:"Ranger", text:"That will do nicely. The next traveller may have you to thank for a sharp axe and a warm fire."},
     trader_intro: {file:"VO009.mp3", speaker:"Trader", text:"Well, you look like someone carrying a story and not quite enough supplies. What can I help you find?"},
-    trader_wares: {file:"VO010.mp3", speaker:"Trader", text:"I trade in useful things. Fancy swords make noise, but a good bandage can get you home."}
+    trader_wares: {file:"VO010.mp3", speaker:"Trader", text:"I trade in useful things. Fancy swords make noise, but a good bandage can get you home."},
+    trader_quest: {file:"VO011.mp3", speaker:"Trader", text:"Two fish from the lake, please. Fresh ones, if you can manage it. My customers can tell the difference."},
+    trader_complete: {file:"VO012.mp3", speaker:"Trader", text:"Now those are fine fish. Here is our bargain, and a little extra for bringing them in whole."},
+    hermit_intro: {file:"VO013.mp3", speaker:"Hermit", text:"Mind the step. The hut is older than either of us, and it enjoys reminding visitors."},
+    hermit_glowcaps: {file:"VO014.mp3", speaker:"Hermit", text:"Glowcaps shine brightest where the light is thinnest. Pick carefully, and leave the smallest ones behind."},
+    hermit_quest: {file:"VO015.mp3", speaker:"Hermit", text:"Bring me three glowcaps. I will brew the useful part, and perhaps tell you what the blue flame means."},
+    hermit_complete: {file:"VO016.mp3", speaker:"Hermit", text:"Three, just as promised. Stay a moment and watch; the brew only settles when nobody rushes it."},
+    tower_intro: {file:"VO017.mp3", speaker:"Tower Watcher", text:"The old watchtower remembers every storm. It has been waiting a long time for someone willing to listen."},
+    tower_riddle: {file:"VO018.mp3", speaker:"Tower Watcher", text:"The riddle is not a trick. It asks whether you can offer warmth without demanding anything back."},
+    tower_complete: {file:"VO019.mp3", speaker:"Tower Watcher", text:"A coal from the dark. A kind gift for a cold place. Hear that? The stone has begun to sing."},
+    tower_return: {file:"VO020.mp3", speaker:"Tower Watcher", text:"You returned. Most people only come for answers. It is good to see someone curious about the questions."}
   });
   const portraits = {
     Caretaker: { coat:"#516a63", skin:"#d3b596", hair:"#e4e8da", backdrop:"#293c3c", accent:"#d4ca92" },

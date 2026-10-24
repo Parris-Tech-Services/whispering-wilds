@@ -49,6 +49,62 @@ const { chromium } = require('playwright');
     assert.ok(smallStage.height <= 65, 'voice strip remains compact at 320px wide');
     const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert.ok(horizontalOverflow <= 2, 'mobile stage must not force horizontal scrolling');
+
+    // Exercise the remaining recorded conversations through real command submissions.
+    // Seed only room/material fixtures; dialogue, rewards and audio use production code.
+    const heard = new Set();
+    await page.evaluate(() => {
+      window.__wwPlayed = [];
+      const play = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function(...args) {
+        this.addEventListener('playing', () => window.__wwPlayed.push(this.currentSrc), {once:true});
+        return play.apply(this,args);
+      };
+    });
+    async function command(text, expected) {
+      await page.locator('#cmd').fill(text);
+      await page.locator('#send').click();
+      if (expected) {
+        await page.waitForFunction(file => window.__wwPlayed.some(url => url.endsWith('/'+file)),expected,{timeout:20000});
+        heard.add(expected);
+        await page.locator('#ww-stop').click().catch(()=>{});
+      }
+    }
+    async function fixture(room,materials={}) {
+      await page.evaluate(({room,materials}) => {
+        window.game.cur_room=room;
+        const mats=window.game._p3.get('mats');
+        for(const [name,count] of Object.entries(materials))mats.set(name,count);
+      },{room,materials});
+    }
+    await fixture('wilds_post',{fish:2});
+    await command('talk trader','VO009.mp3');
+    await command('say 1','VO010.mp3');
+    await command('say 2','VO011.mp3');
+    await command('accept angler_aid');
+    await command('turnin angler_aid','VO012.mp3');
+    await fixture('wilds_hut',{glowcap:3});
+    await command('talk hermit','VO013.mp3');
+    await command('say 2','VO015.mp3');
+    await command('accept hermit_glow');
+    await command('talk hermit');
+    // The accepted-quest menu provides the glowcap location topic.
+    const tips=await page.evaluate(()=>Array.from(window.game._p6.get('dialog').get('options').toJs()).findIndex(x=>x[1]==='hm_glow_tips')+1);
+    assert.ok(tips>0,'glowcap topic is available');
+    await command('say '+tips,'VO014.mp3');
+    await command('turnin hermit_glow','VO016.mp3');
+    await fixture('wilds_tower',{coal:1});
+    await command('talk watcher','VO017.mp3');
+    await command('say 1','VO018.mp3');
+    await command('accept tower_riddle');
+    await command('turnin tower_riddle','VO019.mp3');
+    await command('talk watcher','VO020.mp3');
+    const gold=await page.evaluate(()=>window.game._p3.get('gold'));
+    await command('turnin tower_riddle');
+    assert.equal(await page.evaluate(()=>window.game._p3.get('gold')),gold,'no duplicate quest reward');
+    assert.equal(heard.size,12,'all trader, hermit and watcher clips reached through game commands');
+    console.log('PASS: all ten newly integrated recordings play through real dialogue and quest commands');
+
     assert.deepEqual(failures, [], 'no uncaught page errors');
     console.log('PASS: live Chromium voice + gate + mobile + playback-control journey');
   } finally {
