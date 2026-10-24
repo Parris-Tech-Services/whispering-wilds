@@ -82,6 +82,18 @@ class VoiceIntegrationTests(unittest.TestCase):
         self.assertEqual(HTML.count('send_btn.addEventListener("click"'), 1)
         self.assertEqual(HTML.count('cmd_input.addEventListener("keydown"'), 1)
 
+    def test_game300_bonus_only_suggests_existing_npcs_on_real_events(self):
+        # New clips are optional alternatives, not spoken claims about completed quests.
+        self.assertIn("select.id='ww-bonus-speaker'", JS)
+        self.assertIn("suggestBonusForStory(id,line.speaker)", JS)
+        self.assertIn("const known={Caretaker:'caretaker',Ranger:'ranger',Trader:'trader'}", JS)
+        self.assertIn("if(!name)return", JS)
+        self.assertIn("storyId.endsWith('_intro')?'greeting'", JS)
+        self.assertIn("storyId.endsWith('_directions')||storyId.endsWith('_wares')?'help'", JS)
+        self.assertIn("if(!event)return", JS)
+        self.assertIn("Tap Listen to hear the exact words", JS)
+        self.assertIn("game300?.stopGame300()", JS)
+
     def test_accessible_dialogue_stage(self):
         for name in ("ww-character-stage", "ww-speaker", "ww-caption", "ww-replay", "ww-stop",
                      "ww-voice-toggle", "ww-voice-settings-toggle"):
