@@ -1,3 +1,5 @@
+> **NEW AGENT: START AT [TASK_TRIAGE.md](TASK_TRIAGE.md).** Next eligible unchecked task is **014.1**, unless another agent has claimed it or newer passing evidence completed it. [AGENTS.md](AGENTS.md) defines claim/testing rules; [WORK_CHECKPOINT.md](WORK_CHECKPOINT.md) has the durable claim. The task IDs below are stable; don't use their numerical order to override the dependency-aware triage sequence.
+
 # ElevenLabs integration — numbered outstanding tasks
 
 **Status:** OPEN / NOT YET VERIFIED. **Last inventoried:** 2026-10-24. This document is a task tracker, not evidence that the changes or playtests are done.
