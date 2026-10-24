@@ -65,7 +65,7 @@ const { chromium } = require('playwright');
       await page.locator('#cmd').fill(text);
       await page.locator('#send').click();
       if (expected) {
-        await page.waitForFunction(file => window.__wwPlayed.some(url => url.endsWith('/'+file)),expected,{timeout:20000});
+        await page.waitForFunction(file => window.__wwPlayed.some(url => url.endsWith('/'+file)),expected,{timeout:20000}).catch(async error=>{console.error('Recording missing',text,expected,await page.locator('#out').innerText());throw error;});
         heard.add(expected);
         await page.locator('#ww-stop').click().catch(()=>{});
       }
@@ -84,6 +84,7 @@ const { chromium } = require('playwright');
       await command('say '+choice,file);
     }
     await fixture('sanctum',{herb:0});
+    await page.evaluate(()=>{window.game._ww_caretaker_greeted=false;});
     await command('talk caretaker','VO001.mp3');
     await topic('ct_gate','VO002.mp3');
     await topic('ct_offer_quest','VO003.mp3');
