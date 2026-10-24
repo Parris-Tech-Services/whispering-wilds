@@ -9,13 +9,13 @@
 ## Tasks relevant to this repository (16)
 
 - [ ] **014** [P1] Play through all 20 original recorded dialogue triggers and verify their actual quest/story conditions
-  - [ ] [AI] Enumerate the original 20 VO001–VO020 triggers and preconditions in Wilds source.
+  - [x] [AI] Enumerated VO001–VO020 in `voices.js` and confirmed each event hook exists in the story source; [JPARRISDESKTOP 9-test CI pass](https://github.com/joshualparris/JoshMemory/actions/runs/40057291654), source SHA `9faeb8b`. Actual quest playthrough remains open.
   - [ ] [AI] Run each real story/quest trigger in game, not just HTTP requests, and validate correct speaker/line.
   - [ ] [AI] Assert unearned dialogue is impossible and confirmed events persist across saves.
   - [ ] [AI] Capture replay and production screenshots/browser traces; retain no-cost regression tests.
 - [ ] **015** [P1] Evaluate the 100 new optional recordings and connect suitable lines to genuine characters, locations and events
   - [ ] [AI] Export all 100 Wilds Game300 lines and classify by existing NPC, location and real game event.
-  - [ ] [AI] Match only existing in-world characters and triggered events; keep ungrounded lines opt-in.
+  - [x] [AI] Added optional matching game300 greeting/help suggestions for existing Caretaker, Ranger and Trader only (not fictional bonus-only actors, unearned rewards or quest completion); [self-hosted test pass](https://github.com/joshualparris/JoshMemory/actions/runs/40057291654).
   - [ ] [AI] Add a small scripted condition-to-clip mapping with matching captions and nonblocking playback.
   - [ ] [AI] Run story progression regression and mobile-width real-browser playtest.
 - [ ] **016** [P1] Keep newly invented characters as bonus content until their actual gameplay exists
