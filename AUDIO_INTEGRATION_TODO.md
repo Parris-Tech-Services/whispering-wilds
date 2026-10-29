@@ -12,7 +12,7 @@
 
 - [ ] **014** [P1] Play through all 20 original recorded dialogue triggers and verify their actual quest/story conditions
   - [x] [AI] Enumerated VO001–VO020 in `voices.js` and confirmed each event hook exists in the story source; [JPARRISDESKTOP 9-test CI pass](https://github.com/joshualparris/JoshMemory/actions/runs/40057291654), source SHA `9faeb8b`. Actual quest playthrough remains open.
-  - [ ] **014.1** [AI] Run each real story/quest trigger in game, not just HTTP requests, and validate correct speaker/line.
+  - [x] **014.1** [AI] VERIFIED COMPLETE on current `voices.js` hash `5a8417222449b7c189e89238eb30d126f718ea37812c51305c481646600e6201`. Public Actions [run #40828439293](https://github.com/Parris-Tech-Services/whispering-wilds/actions/runs/40828439293): Python tests 9/9, local actual Chromium gameplay-command 20-line journey PASS, and production `https://whispering-wilds-seven.vercel.app` voice-script byte-identical SHA-256 check followed by real hosted Chromium dialogue/quest playthrough PASS. Voice events bound to actual command and speaker/transcript assertion; browser `playing` events recorded for VO001–VO020, duplicate quest reward prevented, saved tower completion checked after reload; no synthetic quest-completion trigger. Do not infer normal-length non-fixtured playthrough or physical phone audibility.
   - [ ] **014.2** [AI] Assert unearned dialogue is impossible and confirmed events persist across saves.
   - [ ] **014.3** [AI] Capture replay and production screenshots/browser traces; retain no-cost regression tests.
 - [ ] **015** [P1] Evaluate the 100 new optional recordings and connect suitable lines to genuine characters, locations and events
