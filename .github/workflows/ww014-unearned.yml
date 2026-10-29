@@ -1,0 +1,40 @@
+name: WW 014.2 no unearned voice or quest reward
+on:
+  push:
+    branches: [audit/ww014-unearned-dialogue-20261029]
+    paths:
+      - 'tests/voice.browser.cjs'
+      - '.github/workflows/ww014-unearned.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  negative-gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - run: node --check tests/voice.browser.cjs
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Reject all premature turn-ins in the source game
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 >/tmp/ww-unearned.log 2>&1 &
+          for i in $(seq 1 50); do if curl -fsS http://127.0.0.1:8000/index.html >/dev/null; then break; fi; sleep 0.25; done
+          node tests/voice.browser.cjs
+      - name: Repeat against current production, fail closed on drift
+        env:
+          WW_BASE_URL: https://whispering-wilds-seven.vercel.app
+        run: |
+          curl -fsS "$WW_BASE_URL/voices.js" > /tmp/wilds-production-voices.js
+          test "$(sha256sum voices.js | cut -d' ' -f1)" = "$(sha256sum /tmp/wilds-production-voices.js | cut -d' ' -f1)"
+          node tests/voice.browser.cjs
