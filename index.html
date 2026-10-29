@@ -6417,7 +6417,7 @@ def _p6_cmd_turnin(game, args) -> bool:
     
     for qkey, q in game._p6["quests"].items():
         if key in qkey.replace("_", ""):
-            if q["state"] not in ("accepted", "completed"):
+            if q["state"] != "accepted":
                 game.say("You haven't accepted this quest.")
                 return True
             if not _p6_eval_requirements(game, q["need"]):
@@ -7267,7 +7267,7 @@ def _p7_cmd_turnin(game, args) -> bool:
     for qkey, q in game._p6["quests"].items():
         if key in qkey.replace("_", ""):
             if qkey in ("angler_aid", "mine_matters", "hermit_glow"):
-                if q["state"] not in ("accepted", "completed", "offered"):
+                if q["state"] != "accepted":
                     game.say("You haven't accepted this quest. Talk to the quest-giver to accept it.")
                     return True
                 if not _p6_eval_requirements(game, q["need"]):
@@ -14103,8 +14103,13 @@ def _ww_tower_command(cmd, args, game):
         elif quest["state"] == "turned_in":
             game.say("You have already completed Tower Echoes.")
         elif cmd == "accept":
-            quest["state"] = "accepted"
-            game.say("Quest accepted: Tower Echoes. Bring one coal.")
+            if quest["state"] != "offered":
+                game.say("Ask the Watcher for the riddle before accepting this quest.")
+            else:
+                quest["state"] = "accepted"
+                game.say("Quest accepted: Tower Echoes. Bring one coal.")
+        elif quest["state"] != "accepted":
+            game.say("Accept Tower Echoes before offering coal.")
         elif not _p6_eval_requirements(game, quest["need"]):
             game.say("Bring one coal to the Tower Watcher. Coal can be mined.")
         else:
