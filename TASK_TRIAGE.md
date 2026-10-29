@@ -2,10 +2,10 @@
 
 **Updated:** 2026-10-24. **Status:** triage complete; acceptance/implementation work still OPEN. **Scope:** `Parris-Tech-Services/whispering-wilds` browser game on `main`.
 
-> ## START HERE — FIRST AVAILABLE TASK: **014.1** (P1)
-> Run and, if needed, repair the **existing** 20-recording gameplay browser test against the **current** `main` source and canonical live deployment. Do not regenerate audio or duplicate the test. The first coding action should be to inspect `tests/voice.browser.cjs`, `tests/test_voice_integration.py`, `voices.js`, `index.html` and the CI workflow, then run the offline suite and real Chromium test. Capture evidence before checking off 014.1.
+> ## START HERE — FIRST AVAILABLE TASK: **014.2** (P1)
+> Task 014.1 production/local browser test passed 2026-10-29; proceed to targeted **014.2** negative/unearned-dialogue assertions. Do not regenerate audio or duplicate the test. The first coding action should be to inspect `tests/voice.browser.cjs`, `tests/test_voice_integration.py`, `voices.js`, `index.html` and the CI workflow, then run the offline suite and real Chromium test. Capture evidence before checking off 014.1.
 >
-> **Next after 014.1 passes:** **014.2** (negative/unearned-dialogue assertions), then **017.1** (save state capture), following the single ordered queue below. If blocked, record the blocker and take the next independent eligible task rather than stopping.
+> **Next after verified 014.1:** **014.2** (negative/unearned-dialogue assertions), then **017.1** (save state capture), following the single ordered queue below. If blocked, record the blocker and take the next independent eligible task rather than stopping.
 
 ## Canonical locations and repository boundaries
 
@@ -80,3 +80,10 @@ If a browser or publishing capability is genuinely unavailable, mark `014.1` BLO
 ## Post-release verification and next queue step
 
 After each verified subtask: mark the checkbox, update checkpoint and mirrored master, then select the first remaining eligible subtask from this queue. No need to ask for a new prioritisation decision each time.
+
+
+## 29 October 2026 — WW 014.1 verified complete, queue advanced
+
+- GitHub Actions [40828439293](https://github.com/Parris-Tech-Services/whispering-wilds/actions/runs/40828439293) SUCCESS all three current-source jobs: nine Python tests and JS syntax, Chromium locally on checked-out source with legitimate gameplay commands producing VO001–VO020 `playing` events, and browser replay at public production URL after exact SHA-256 match of deployed `voices.js`. Measured identical hex `5a8417222449b7c189e89238eb30d126f718ea37812c51305c481646600e6201`; audio source and clinical/gameplay logic were not edited.
+- Local and hosted browser flows verified the correct speaker/caption, 20 recorded events, UI stop and mobile-width accessibility, duplicate tower reward prevented and completed quest persists on save/reload. Existing harness uses known room/material fixtures but issues real dialogue/turn-in commands; not a manual full natural-length playthrough or real physical speaker test.
+- Checked 014.1 only. Next eligible ID **014.2** remains open (negative/unearned dialogue beyond the tested duplicate reward). Existing parent 014 stays OPEN until 014.2, 014.3 complete.

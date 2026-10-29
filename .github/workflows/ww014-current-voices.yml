@@ -1,0 +1,79 @@
+name: WW-014 current source and live 20-voice gameplay acceptance
+on:
+  push:
+    branches: [audit/ww014-current-browser-20261029]
+    paths:
+      - '.github/workflows/ww014-current-voices.yml'
+      - 'WORK_CHECKPOINT.md'
+      - 'voices.js'
+      - 'tests/voice.browser.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - run: node --check voices.js
+      - run: node --check tests/voice.browser.cjs
+  local-20-originals:
+    needs: offline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Play 20 real game-command dialogue triggers using current source
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 >/tmp/ww014-web.log 2>&1 &
+          for i in $(seq 1 40); do if curl -fsS http://127.0.0.1:8000/index.html >/dev/null; then break; fi; sleep 0.25; done
+          node tests/voice.browser.cjs
+  live-current-source:
+    needs: local-20-originals
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Prove deployed dialogue source is byte-identical to current source
+        env:
+          WW_BASE_URL: https://whispering-wilds-seven.vercel.app
+        run: |
+          curl -fsS --retry 2 "$WW_BASE_URL/voices.js" -o /tmp/ww014-production-voices.js
+          local=$(sha256sum voices.js | cut -d' ' -f1)
+          remote=$(sha256sum /tmp/ww014-production-voices.js | cut -d' ' -f1)
+          echo "SOURCE=$GITHUB_SHA LOCAL_VOICES_HASH=$local PRODUCTION_VOICES_HASH=$remote"
+          if [ "$local" != "$remote" ]; then
+            echo "::error::Production voices.js does not match current source; do not claim 014.1 production acceptance"
+            exit 1
+          fi
+      - name: Play all twenty original voice recordings through real hosted gameplay
+        env:
+          WW_BASE_URL: https://whispering-wilds-seven.vercel.app
+        run: node tests/voice.browser.cjs
