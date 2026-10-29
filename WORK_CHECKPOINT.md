@@ -40,3 +40,11 @@ Copy and fill this template; never overwrite someone else's active claim without
 ## Rules
 
 Update this checkpoint at start, each milestone, before switching tasks and during long work, and commit alongside the work. Only `VERIFIED_COMPLETE` earns a checked `[x]` in the task tracker. A green check for GitHub Pages publishing alone is not sufficient.
+
+
+## 29 Oct 2026 — WW 014.1 current-SHA browser acceptance claim
+
+- Task: **014.1 IN_PROGRESS** (not complete until real game commands cause 20 matching MP3 play events and production current-release evidence).
+- Agent: ChatGPT continuation; branch: `audit/ww014-current-browser-20261029`; baseline canonical main: `17442012505937d8d3650e2976490c7de0d6758d`.
+- First approach: preserve current `tests/voice.browser.cjs` and game source, add no-billing public CI to run current-SHA Python/JS checks and actual local Chromium game journey. Production gate separately verifies that the deployed `voices.js` SHA-256 equals checked-out `voices.js` before replaying the same journey; if old deploy, fail closed rather than claim current acceptance.
+- No new voice synthesis/MP3, quest rules or save changes; do not mark task checkbox yet. Record actual workflow run logs and result below when available.
