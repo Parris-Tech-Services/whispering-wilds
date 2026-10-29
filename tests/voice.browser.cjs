@@ -83,18 +83,41 @@ const { chromium } = require('playwright');
       assert.ok(choice>0,'dialogue action available: '+action);
       await command('say '+choice,file);
     }
+    // Negative-control acceptance: the recorded completion must be earned by a
+    // real quest transition, never by submitting an early turn-in command.
+    async function rejectUnearned(quest,completionFile) {
+      const before=await page.evaluate(({quest,completionFile})=>({
+        gold:window.game._p3.get('gold'),
+        state:window.game._p6.get('quests').get(quest).get('state'),
+        played:window.__wwPlayed.filter(url=>url.endsWith('/'+completionFile)).length
+      }),{quest,completionFile});
+      await command('turnin '+quest);
+      await page.waitForTimeout(400);
+      const after=await page.evaluate(({quest,completionFile})=>({
+        gold:window.game._p3.get('gold'),
+        state:window.game._p6.get('quests').get(quest).get('state'),
+        played:window.__wwPlayed.filter(url=>url.endsWith('/'+completionFile)).length
+      }),{quest,completionFile});
+      assert.notEqual(after.state,'turned_in',quest+': unearned quest completion');
+      assert.equal(after.gold,before.gold,quest+': unearned gold reward');
+      assert.equal(after.played,before.played,completionFile+': unearned recording');
+    }
     await fixture('sanctum',{herb:0});
     await page.evaluate(()=>{window.game._ww_caretaker_greeted=false;});
     await command('talk caretaker','VO001.mp3');
     await topic('ct_gate','VO002.mp3');
     await topic('ct_offer_quest','VO003.mp3');
+    await rejectUnearned('heal_grove','VO004.mp3');
     await command('accept heal_grove');
+    await rejectUnearned('heal_grove','VO004.mp3');
     await fixture('sanctum',{herb:2});
     await command('turnin heal_grove','VO004.mp3');
     await fixture('wilds_camp',{ore:0});
     await command('talk ranger','VO005.mp3');
     await topic('rg_offer_quest','VO007.mp3');
+    await rejectUnearned('mine_matters','VO008.mp3');
     await command('accept mine_matters');
+    await rejectUnearned('mine_matters','VO008.mp3');
     await command('talk ranger');
     await topic('rg_mine_tips','VO006.mp3');
     await fixture('wilds_camp',{ore:2});
@@ -103,12 +126,15 @@ const { chromium } = require('playwright');
     await command('talk trader','VO009.mp3');
     await command('say 1','VO010.mp3');
     await command('say 2','VO011.mp3');
+    await rejectUnearned('angler_aid','VO012.mp3');
     await command('accept angler_aid');
     await command('turnin angler_aid','VO012.mp3');
     await fixture('wilds_hut',{glowcap:0});
     await command('talk hermit','VO013.mp3');
     await command('say 2','VO015.mp3');
+    await rejectUnearned('hermit_glow','VO016.mp3');
     await command('accept hermit_glow');
+    await rejectUnearned('hermit_glow','VO016.mp3');
     await command('talk hermit');
     // The accepted-quest menu provides the glowcap location topic.
     const tips=await page.evaluate(()=>Array.from(window.game._p6.get('dialog').get('options').toJs()).findIndex(x=>x[1]==='hm_glow_tips')+1);
@@ -119,6 +145,7 @@ const { chromium } = require('playwright');
     await fixture('wilds_tower',{coal:1});
     await command('talk watcher','VO017.mp3');
     await command('say 1','VO018.mp3');
+    await rejectUnearned('tower_riddle','VO019.mp3');
     await command('accept tower_riddle');
     await command('turnin tower_riddle','VO019.mp3');
     await command('talk watcher','VO020.mp3');
