@@ -1,9 +1,10 @@
 name: WW 014.2 no unearned voice or quest reward
 on:
   push:
-    branches: [audit/ww014-unearned-dialogue-20261029]
+    branches: [main, audit/ww014-unearned-dialogue-20261029]
     paths:
       - 'tests/voice.browser.cjs'
+      - 'index.html'
       - '.github/workflows/ww014-unearned.yml'
   workflow_dispatch:
 permissions:
@@ -31,10 +32,22 @@ jobs:
           python -m http.server 8000 --bind 127.0.0.1 >/tmp/ww-unearned.log 2>&1 &
           for i in $(seq 1 50); do if curl -fsS http://127.0.0.1:8000/index.html >/dev/null; then break; fi; sleep 0.25; done
           node tests/voice.browser.cjs
-      - name: Repeat against current production, fail closed on drift
+      - name: Repeat against current production after merge, fail closed on drift
+        if: github.ref == 'refs/heads/main'
         env:
           WW_BASE_URL: https://whispering-wilds-seven.vercel.app
         run: |
           curl -fsS "$WW_BASE_URL/voices.js" > /tmp/wilds-production-voices.js
           test "$(sha256sum voices.js | cut -d' ' -f1)" = "$(sha256sum /tmp/wilds-production-voices.js | cut -d' ' -f1)"
+          # Do not mistake old production with a new gameplay fix. Wait only for a matching publication.
+          expected="$(sha256sum index.html | cut -d' ' -f1)"
+          matched=0
+          for attempt in $(seq 1 40); do
+            if curl -fsS "$WW_BASE_URL/index.html" -o /tmp/wilds-current-index.html; then
+              actual="$(sha256sum /tmp/wilds-current-index.html | cut -d' ' -f1)"
+              if [ "$actual" = "$expected" ]; then matched=1; break; fi
+            fi
+            sleep 5
+          done
+          test "$matched" = 1 || { echo "::error::Production index.html has not deployed the quest-state guard"; exit 1; }
           node tests/voice.browser.cjs
